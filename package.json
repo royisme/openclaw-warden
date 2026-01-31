@@ -1,0 +1,28 @@
+{
+  "name": "openclaw-warden",
+  "version": "0.1.0",
+  "description": "OpenClaw config guard + heartbeat monitor",
+  "type": "module",
+  "bin": {
+    "openclaw-warden": "./src/warden.js"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "package.json"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "scripts": {
+    "warden": "node ./src/warden.js",
+    "start": "node ./src/warden.js run"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "tsx": "^4.21.0",
+    "zod": "^3.24.2"
+  }
+}

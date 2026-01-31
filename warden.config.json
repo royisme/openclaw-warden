@@ -1,0 +1,33 @@
+{
+  "paths": {
+    "repoConfig": "./config/openclaw.json",
+    "liveConfig": "~/.openclaw/openclaw.json",
+    "schemaFile": "./state/schema.json"
+  },
+  "schema": {
+    "source": "git",
+    "repoUrl": "https://github.com/openclaw/openclaw.git",
+    "ref": "main",
+    "checkoutDir": "./state/openclaw",
+    "useLocalDeps": true,
+    "nodePath": "./node_modules",
+    "exportCommand": "node --import tsx -e \"import { buildConfigSchema } from './src/config/schema.ts'; console.log(JSON.stringify(buildConfigSchema(), null, 2));\""
+  },
+  "git": {
+    "enabled": true,
+    "autoInit": true
+  },
+  "heartbeat": {
+    "intervalMinutes": 5,
+    "waitSeconds": [30, 40, 50],
+    "checkCommand": "node ./src/check-health.js",
+    "agentProbe": {
+      "enabled": true,
+      "fallbackAgentId": "main",
+      "command": "node ./src/check-agent-probe.js"
+    },
+    "notifyOnRestart": true,
+    "notifyCommand": "openclaw agent --agent {agentId} -m \"[warden] gateway restarted after failed health check\" --channel last --deliver",
+    "restartCommand": "openclaw gateway restart"
+  }
+}

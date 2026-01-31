@@ -25,12 +25,20 @@
   "license": "MIT",
   "scripts": {
     "warden": "node ./src/warden.js",
-    "start": "node ./src/warden.js run"
+    "start": "node ./src/warden.js run",
+    "changelog": "standard-version --skip.bump --skip.commit --skip.tag",
+    "release": "standard-version",
+    "release:patch": "standard-version --release-as patch",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major"
   },
   "dependencies": {
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "tsx": "^4.21.0",
     "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "standard-version": "^9.5.0"
   }
 }

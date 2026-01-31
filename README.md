@@ -189,3 +189,33 @@ Supported placeholders:
 
 ## Acknowledgements
 This project exists because OpenClaw makes production agent workflows practical. Thank you to the OpenClaw team and community for building it.
+
+## Release workflow
+
+### Versioning and changelog
+This project uses `standard-version` for semantic versioning and changelog generation.
+
+- Generate/refresh changelog only:
+```bash
+npm run changelog
+```
+
+- Create a release (bumps version, updates changelog, creates a git tag):
+```bash
+npm run release
+# or
+npm run release:patch
+npm run release:minor
+npm run release:major
+```
+
+Then push commits and tags:
+```bash
+git push --follow-tags
+```
+
+### npm publish via GitHub Actions
+Publishing is automated when a tag like `v1.2.3` is pushed.
+
+Required secret:
+- `NPM_TOKEN` (npm access token with publish permission)

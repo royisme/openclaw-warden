@@ -1,21 +1,37 @@
 # OpenClaw Warden
 
-A lightweight watchdog/guard:
-- Validates OpenClaw config using the official schema to avoid crashes
-- Stores config in this repo and versions changes with git, then syncs to `~/.openclaw/openclaw.json`
-- Heartbeat checks every 5 minutes with 30/40/50-second backoff; restarts the gateway if unhealthy
+OpenClaw Warden is a small guardrail CLI for production OpenClaw deployments. It keeps your gateway stable by validating configuration changes, versioning them with git, and running health/agent probes with automatic restart when needed.
+
+## Why this exists
+
+Over 72 hours of hands-on deployment:
+- Day 1: excitement + pitfalls
+- Day 2: crashes + git saved the day
+- Day 3: stable operation + feature expansion
+
+OpenClaw now runs in my production environment and handles daily automation workloads. It still has sharp edges, but overall it is stable. It is not perfect, yet it is the closest open-source agent framework I have seen to "production usable."
+
+Tools are like people: nothing is perfect. The important part is knowing the strengths and weaknesses and deciding which trade-offs you can accept. OpenClaw's strengths are strong, and its weaknesses are clear. For me, the 72 hours were worth it because it made the real-world potential of AI agents tangible.
+
+OpenClaw Warden exists to make those trade-offs safer and easier to manage.
+
+## What it does
+
+- Validates OpenClaw config using the official schema to prevent crash loops
+- Stores config in a git-managed workspace and syncs it to `~/.openclaw/openclaw.json`
+- Runs periodic health checks and agent probes with backoff
+- Restarts the gateway and notifies the last active channel after failure
 
 ## Layout
-- `warden.config.json`: warden configuration
+- `warden.config.json`: Warden configuration
 - `config/openclaw.json`: managed OpenClaw config (git-tracked)
 - `state/schema.json`: OpenClaw config schema (generated)
 - `src/warden.js`: CLI entry
 
 ## Initialization
-`openclaw-warden init` creates `warden.config.json` in the current directory (if missing),
-and pulls `~/.openclaw/openclaw.json` into `./config/openclaw.json`.
-**Note:** `config/openclaw.json` is always created relative to the directory
-containing `warden.config.json`.
+`openclaw-warden init` creates `warden.config.json` in the current directory (if missing), and pulls `~/.openclaw/openclaw.json` into `./config/openclaw.json`.
+
+**Important:** `config/openclaw.json` is always created relative to the directory containing `warden.config.json`. Put the config where you want the managed OpenClaw config to live.
 
 ## Quick start
 
@@ -42,7 +58,8 @@ npx openclaw-warden run
 ```
 
 ## Background (daemon)
-You can run in the background (no foreground terminal needed):
+Run in the background (no foreground terminal needed):
+
 ```bash
 npx openclaw-warden daemon:start
 npx openclaw-warden daemon:status
@@ -54,7 +71,7 @@ Default pid/log paths:
 - log: `os.tmpdir()/openclaw-warden/warden.log`
 
 ## System service (recommended)
-For auto-start after reboot, install a system service:
+If you need auto-start after reboot, install a system service.
 
 ### Linux (systemd --user)
 ```bash
@@ -85,6 +102,7 @@ schtasks /Create /TN OpenClawWarden /XML $env:TEMP\openclaw-warden.xml /F
   - Windows: `%APPDATA%\openclaw-warden\warden.config.json`
 
 `init` creates the config in the current directory by default. Use `--global` to write to the global path:
+
 ```bash
 npx openclaw-warden init --global
 ```
@@ -126,11 +144,20 @@ npx openclaw-warden init --global
 }
 ```
 
+### Commands
+- `config:pull` (alias: `pull`): copy live config into the repo + git commit
+- `config:push` (alias: `push`): validate and sync repo config to the live path + git commit
+- `config:validate` (alias: `validate`): validate repo config against schema
+- `schema:update`: update schema from OpenClaw source
+- `watch`: watch repo config and auto-apply on changes
+- `heartbeat`: run health/agent probes loop
+- `run`: watch + heartbeat
+
 ### checkCommand / notifyCommand / restartCommand / placeholders
 - `checkCommand`: health check (**exit code 0 = healthy**)
 - `agentProbe`: optional agent probe after gateway health
 - `notifyOnRestart`: send notification after restart
-- `notifyCommand`: notify command (recommended to use `openclaw agent ... --channel last --deliver`)
+- `notifyCommand`: notification command (recommended to use `openclaw agent ... --channel last --deliver`)
 - `restartCommand`: restart command
 
 Supported placeholders:
@@ -146,12 +173,12 @@ Supported placeholders:
 - Optional: set `logging.file` to override
 
 ### Default health check script
-- `src/check-health.js`: runs `openclaw gateway call health --json`, parses the last JSON object and checks `ok: true`
+- `src/check-health.js` runs `openclaw gateway call health --json`, parses the last JSON object and checks `ok: true`
 - Writes recent session info to `os.tmpdir()/openclaw-warden/health.json` for notify/agent probe use
 - Only requires `openclaw` in PATH
 
 ### Default agent probe script
-- `src/check-agent-probe.js`: reads `health.json` for `agentId` (fallback `main`), runs
+- `src/check-agent-probe.js` reads `health.json` for `agentId` (fallback `main`), runs
   `openclaw agent --agent <id> -m "healthcheck" --json --timeout 60`
   and checks `status: "ok"`
 
@@ -159,3 +186,6 @@ Supported placeholders:
 - `schema:update` auto-clones OpenClaw source (default: main) and generates schema locally.
 - By default, OpenClaw repo dependencies are not installed; warden reuses its own `node_modules` (`useLocalDeps: true`).
 - All git operations only affect this repo; `~/.openclaw/` is never git-managed.
+
+## Acknowledgements
+This project exists because OpenClaw makes production agent workflows practical. Thank you to the OpenClaw team and community for building it.

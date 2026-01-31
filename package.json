@@ -6,6 +6,14 @@
   "bin": {
     "openclaw-warden": "./src/warden.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/royisme/openclaw-warden.git"
+  },
+  "bugs": {
+    "url": "https://github.com/royisme/openclaw-warden/issues"
+  },
+  "homepage": "https://github.com/royisme/openclaw-warden#readme",
   "files": [
     "src",
     "README.md",

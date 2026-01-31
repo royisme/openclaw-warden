@@ -98,16 +98,14 @@ schtasks /Create /TN OpenClawWarden /XML $env:TEMP\openclaw-warden.xml /F
 > Tip: service templates assume `openclaw-warden` is on PATH (use `npm i -g openclaw-warden`).
 
 ## Config location strategy
-- Prefer `./warden.config.json` in the current directory
-- If missing, fall back to the global config directory:
-  - macOS: `~/Library/Application Support/openclaw-warden/warden.config.json`
-  - Linux: `~/.config/openclaw-warden/warden.config.json`
-  - Windows: `%APPDATA%\openclaw-warden\warden.config.json`
+- Default location (macOS/Linux): `~/.config/openclaw-warden/warden.config.json`
+- Windows: `%APPDATA%\\openclaw-warden\\warden.config.json`
+- If a local `./warden.config.json` exists, it is preferred.
 
-`init` creates the config in the current directory by default. Use `--global` to write to the global path:
+`init` creates the config in the global directory by default. Use `--local` to write to the current directory:
 
 ```bash
-npx openclaw-warden init --global
+npx openclaw-warden init --local
 ```
 
 ## Configuration (warden.config.json)

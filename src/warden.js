@@ -18,14 +18,6 @@ const DAEMON_PID = path.join(DAEMON_DIR, "warden.pid");
 const DAEMON_LOG = path.join(DAEMON_DIR, "warden.log");
 
 function resolveGlobalConfigDir() {
-  if (process.platform === "darwin") {
-    return path.join(
-      os.homedir(),
-      "Library",
-      "Application Support",
-      "openclaw-warden",
-    );
-  }
   if (process.platform === "win32") {
     const appData =
       process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming");
@@ -37,8 +29,9 @@ function resolveGlobalConfigDir() {
 
 function resolveConfigPath() {
   if (process.env.WARDEN_CONFIG) return process.env.WARDEN_CONFIG;
-  if (fs.existsSync(DEFAULT_CONFIG_PATH)) return DEFAULT_CONFIG_PATH;
-  return path.join(resolveGlobalConfigDir(), DEFAULT_CONFIG_NAME);
+  const globalPath = path.join(resolveGlobalConfigDir(), DEFAULT_CONFIG_NAME);
+  if (fs.existsSync(globalPath)) return globalPath;
+  return DEFAULT_CONFIG_PATH;
 }
 
 function isProcessAlive(pid) {
@@ -414,9 +407,9 @@ function renderWindowsTask(configPath) {
 
 async function ensureDefaultConfig({ scope } = {}) {
   const configPath =
-    scope === "global"
-      ? path.join(resolveGlobalConfigDir(), DEFAULT_CONFIG_NAME)
-      : DEFAULT_CONFIG_PATH;
+    scope === "local"
+      ? DEFAULT_CONFIG_PATH
+      : path.join(resolveGlobalConfigDir(), DEFAULT_CONFIG_NAME);
   if (fs.existsSync(configPath)) {
     return configPath;
   }
@@ -918,7 +911,7 @@ async function main() {
   const [cmd] = process.argv.slice(2);
   let config = null;
   if (cmd === "init") {
-    const scope = process.argv.includes("--global") ? "global" : "local";
+    const scope = process.argv.includes("--local") ? "local" : "global";
     await ensureDefaultConfig({ scope });
   }
   const loaded = await loadConfig();

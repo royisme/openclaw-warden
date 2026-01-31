@@ -22,6 +22,9 @@ OpenClaw Warden exists to make those trade-offs safer and easier to manage.
 - Runs periodic health checks and agent probes with backoff
 - Restarts the gateway and notifies the last active channel after failure
 
+Git is initialized in the directory that contains the managed config file
+(by default, `./config/` next to `warden.config.json`).
+
 ## Layout
 - `warden.config.json`: Warden configuration
 - `config/openclaw.json`: managed OpenClaw config (git-tracked)

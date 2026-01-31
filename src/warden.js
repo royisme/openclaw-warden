@@ -426,11 +426,11 @@ async function ensureDefaultConfig({ scope } = {}) {
   return configPath;
 }
 
-async function ensureGitRepo(autoInit) {
-  const gitDir = path.join(CWD, ".git");
+async function ensureGitRepo(repoDir, autoInit) {
+  const gitDir = path.join(repoDir, ".git");
   if (fs.existsSync(gitDir)) return true;
   if (!autoInit) return false;
-  const res = await execShell("git init");
+  const res = await execShell("git init", { cwd: repoDir });
   if (res.code !== 0) {
     logWarn(`git init failed: ${res.stderr.trim()}`);
     return false;
@@ -438,8 +438,8 @@ async function ensureGitRepo(autoInit) {
   return true;
 }
 
-async function gitCommitIfChanged(files, message) {
-  const status = await execShell("git status --porcelain");
+async function gitCommitIfChanged(repoDir, files, message) {
+  const status = await execShell("git status --porcelain", { cwd: repoDir });
   if (status.code !== 0) {
     logWarn(`git status failed: ${status.stderr.trim()}`);
     return;
@@ -451,12 +451,14 @@ async function gitCommitIfChanged(files, message) {
   if (!changed) return;
 
   const addCmd = `git add ${files.map((f) => `"${f}"`).join(" ")}`;
-  const addRes = await execShell(addCmd);
+  const addRes = await execShell(addCmd, { cwd: repoDir });
   if (addRes.code !== 0) {
     logWarn(`git add failed: ${addRes.stderr.trim()}`);
     return;
   }
-  const commitRes = await execShell(`git commit -m "${message}"`);
+  const commitRes = await execShell(`git commit -m "${message}"`, {
+    cwd: repoDir,
+  });
   if (commitRes.code !== 0) {
     logWarn(`git commit failed: ${commitRes.stderr.trim()}`);
   }
@@ -698,6 +700,7 @@ async function syncPull(config) {
     config.paths.repoConfig,
     configDir,
   );
+  const repoRoot = path.dirname(repoConfigPath);
   const liveConfigPath = resolvePathWithBase(
     config.paths.liveConfig,
     configDir,
@@ -710,10 +713,14 @@ async function syncPull(config) {
   logInfo(`Pulled live config -> repo: ${repoConfigPath}`);
 
   if (config.git?.enabled) {
-    const gitReady = await ensureGitRepo(Boolean(config.git?.autoInit));
+    const gitReady = await ensureGitRepo(
+      repoRoot,
+      Boolean(config.git?.autoInit),
+    );
     if (gitReady) {
       await gitCommitIfChanged(
-        [path.relative(CWD, repoConfigPath)],
+        repoRoot,
+        [path.relative(repoRoot, repoConfigPath)],
         `sync pull ${nowIso()}`,
       );
     }
@@ -726,6 +733,7 @@ async function syncPush(config) {
     config.paths.repoConfig,
     configDir,
   );
+  const repoRoot = path.dirname(repoConfigPath);
   const liveConfigPath = resolvePathWithBase(
     config.paths.liveConfig,
     configDir,
@@ -735,10 +743,14 @@ async function syncPush(config) {
   logInfo(`Pushed repo config -> live: ${liveConfigPath}`);
 
   if (config.git?.enabled) {
-    const gitReady = await ensureGitRepo(Boolean(config.git?.autoInit));
+    const gitReady = await ensureGitRepo(
+      repoRoot,
+      Boolean(config.git?.autoInit),
+    );
     if (gitReady) {
       await gitCommitIfChanged(
-        [path.relative(CWD, repoConfigPath)],
+        repoRoot,
+        [path.relative(repoRoot, repoConfigPath)],
         `sync push ${nowIso()}`,
       );
     }
@@ -751,6 +763,7 @@ async function initWarden(config) {
     config.paths.repoConfig,
     configDir,
   );
+  const repoRoot = path.dirname(repoConfigPath);
   const liveConfigPath = resolvePathWithBase(
     config.paths.liveConfig,
     configDir,
@@ -766,10 +779,14 @@ async function initWarden(config) {
   }
 
   if (config.git?.enabled) {
-    const gitReady = await ensureGitRepo(Boolean(config.git?.autoInit));
+    const gitReady = await ensureGitRepo(
+      repoRoot,
+      Boolean(config.git?.autoInit),
+    );
     if (gitReady) {
       await gitCommitIfChanged(
-        [path.relative(CWD, repoConfigPath)],
+        repoRoot,
+        [path.relative(repoRoot, repoConfigPath)],
         `init ${nowIso()}`,
       );
     }
